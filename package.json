@@ -1,1 +1,1 @@
-```json { "name": "whatsapp-deal-closer", "version": "1.0.0", "private": true, "scripts": { "build": "echo 'no build script defined'" }, "dependencies": {} } ```
+json { "name": "whatsapp-deal-closer", "version": "1.0.0", "private": true, "scripts": { "build": "echo 'no build script defined'" }, "dependencies": {} }
