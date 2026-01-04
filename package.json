@@ -10,6 +10,7 @@
     "@google/genai": "^1.34.0"
   },
   "scripts": {
-    "build": "echo 'ESM-native build: ready to deploy'"
+    "build": "echo 'Build skipped: App runs directly via ESM'",
+    "start": "echo 'Serve your root directory using any static server'"
   }
 }
