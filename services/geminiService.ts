@@ -3,7 +3,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { FollowUpInputs, GeneratedMessage } from "../types";
 
 export const generateWebinarFollowUps = async (inputs: FollowUpInputs): Promise<GeneratedMessage[]> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  // Use the API key directly from the environment variable as per guidelines
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `
     You are a world-class WhatsApp Sales Closing Expert for Indian businesses. 
@@ -27,44 +28,56 @@ export const generateWebinarFollowUps = async (inputs: FollowUpInputs): Promise<
     - Message 2: Value-add or handling the logical objection behind the problem.
     - Message 3: Final gentle nudge/FOMO regarding the opportunity.
 
-    FORMAT: Return as JSON with a 'messages' array containing 'stepName' and 'text'.
+    FORMAT: Return only a raw JSON object. Do not include markdown formatting.
   `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          messages: {
-            type: Type.ARRAY,
-            minItems: 3,
-            maxItems: 3,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                stepName: { type: Type.STRING },
-                text: { type: Type.STRING },
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: [{ parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            messages: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  stepName: { type: Type.STRING },
+                  text: { type: Type.STRING },
+                },
+                required: ["stepName", "text"]
               },
-              required: ["stepName", "text"]
             },
           },
+          required: ["messages"],
         },
-        required: ["messages"],
       },
-    },
-  });
+    });
 
-  try {
-    const data = JSON.parse(response.text);
-    return (data.messages || []).map((m: any, i: number) => ({
+    const responseText = response.text || '';
+    
+    // Safety check: Strip markdown code blocks if the model accidentally includes them
+    const cleanJson = responseText
+      .replace(/^```json\n?/, '')
+      .replace(/\n?```$/, '')
+      .trim();
+
+    const data = JSON.parse(cleanJson);
+    
+    if (!data.messages || !Array.isArray(data.messages)) {
+      throw new Error("Invalid response format from AI");
+    }
+
+    return data.messages.map((m: any, i: number) => ({
       id: `msg-${Date.now()}-${i}`,
-      ...m
+      stepName: m.stepName || `Step ${i + 1}`,
+      text: m.text
     }));
   } catch (error) {
-    console.error("Gemini Parse Error:", error);
-    return [];
+    console.error("Gemini Service Error:", error);
+    throw error;
   }
 };

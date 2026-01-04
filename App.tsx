@@ -26,13 +26,24 @@ const App: React.FC = () => {
       const result = await generateWebinarFollowUps(inputs);
       if (result.length === 0) throw new Error("Could not generate messages");
       setMessages(result);
+      
       // Smooth scroll to results
       setTimeout(() => {
-        window.scrollTo({ top: 600, behavior: 'smooth' });
+        const resultsSection = document.getElementById('results-section');
+        if (resultsSection) {
+          resultsSection.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.scrollTo({ top: 600, behavior: 'smooth' });
+        }
       }, 100);
-    } catch (err) {
-      setError("Failed to connect. Please check your internet and try again.");
-      console.error(err);
+    } catch (err: any) {
+      console.error("Generation Error Details:", err);
+      // Provide a more descriptive error message
+      if (err.message?.includes('API key')) {
+        setError("Configuration error: API key missing or invalid.");
+      } else {
+        setError("Something went wrong. Please check your connection and try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -60,13 +71,13 @@ const App: React.FC = () => {
         />
 
         {error && (
-          <div className="mt-8 p-6 bg-red-50 border-2 border-red-100 text-red-700 rounded-2xl text-center font-bold animate-bounce">
+          <div className="mt-8 p-6 bg-red-50 border-2 border-red-100 text-red-700 rounded-2xl text-center font-bold animate-pulse">
             ⚠️ {error}
           </div>
         )}
 
         {messages.length > 0 && !loading && (
-          <div className="mt-16 space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <div id="results-section" className="mt-16 space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="flex items-center gap-6">
               <div className="h-0.5 flex-1 bg-gradient-to-r from-transparent to-gray-200"></div>
               <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] whitespace-nowrap">
