@@ -1,34 +1,24 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { FollowUpInputs, GeneratedMessage } from "../types";
 
 export const generateWebinarFollowUps = async (inputs: FollowUpInputs): Promise<GeneratedMessage[]> => {
-  // Use the API key directly from the environment variable as per guidelines
+  // Always use the latest instance for the request
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `
-    You are a world-class WhatsApp Sales Closing Expert for Indian businesses. 
-    Category: ${inputs.productCategory}
+    Role: Expert WhatsApp Sales Assistant for Indian Business.
+    Business Type: ${inputs.productCategory}
+    User Situation: ${inputs.problem}
+    Target Audience: ${inputs.customerType}
+    Tone: ${inputs.tone}
+    Language: ${inputs.language}
+
+    Task: Write 3 short WhatsApp messages (2-3 lines each) to help the user resolve the situation professionally.
     
-    TASK: Generate exactly 3 high-impact follow-up messages for this specific problem: ${inputs.problem}.
-    
-    TARGET AUDIENCE: ${inputs.customerType}
-    TONE: ${inputs.tone}
-    LANGUAGE: ${inputs.language}
-
-    STRICT RULES:
-    1. GENDER NEUTRALITY: The sender's gender MUST NOT be visible. Avoid gendered verbs in Hindi/Hinglish (e.g., use "Team se update hai" instead of "Main kar raha hoon"). Do not use "raha" or "rahi". Use professional, neutral phrasing.
-    2. SOLIDITY: Messages must be authoritative and professional. No desperation.
-    3. QUANTITY: Generate exactly 3 messages as a sequence.
-    4. LENGTH: 2-4 lines per message.
-    5. CALL TO ACTION: End each message with a polite, low-friction question.
-
-    STRATEGY:
-    - Message 1: Professional check-in addressing the specific problem.
-    - Message 2: Value-add or handling the logical objection behind the problem.
-    - Message 3: Final gentle nudge/FOMO regarding the opportunity.
-
-    FORMAT: Return only a raw JSON object. Do not include markdown formatting.
+    Guidelines:
+    1. Gender Neutral: Use neutral Hindi/English (Hinglish). Avoid "raha/rahi". Use "Team", "Aapka", etc.
+    2. Professional & Helpful: No aggressive sales tactics.
+    3. Call to Action: Every message should end with a very soft, polite question.
   `;
 
   try {
@@ -45,39 +35,30 @@ export const generateWebinarFollowUps = async (inputs: FollowUpInputs): Promise<
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  stepName: { type: Type.STRING },
-                  text: { type: Type.STRING },
+                  step: { type: Type.STRING, description: "e.g. Follow-up 1" },
+                  text: { type: Type.STRING, description: "The WhatsApp message content" }
                 },
-                required: ["stepName", "text"]
-              },
-            },
+                required: ["step", "text"]
+              }
+            }
           },
-          required: ["messages"],
-        },
-      },
+          required: ["messages"]
+        }
+      }
     });
 
-    const responseText = response.text || '';
-    
-    // Safety check: Strip markdown code blocks if the model accidentally includes them
-    const cleanJson = responseText
-      .replace(/^```json\n?/, '')
-      .replace(/\n?```$/, '')
-      .trim();
+    const text = response.text;
+    if (!text) throw new Error("Empty response from AI");
 
-    const data = JSON.parse(cleanJson);
+    const data = JSON.parse(text);
     
-    if (!data.messages || !Array.isArray(data.messages)) {
-      throw new Error("Invalid response format from AI");
-    }
-
     return data.messages.map((m: any, i: number) => ({
       id: `msg-${Date.now()}-${i}`,
-      stepName: m.stepName || `Step ${i + 1}`,
+      stepName: m.step || `Step ${i + 1}`,
       text: m.text
     }));
-  } catch (error) {
-    console.error("Gemini Service Error:", error);
+  } catch (error: any) {
+    console.error("Gemini API Error:", error);
     throw error;
   }
 };

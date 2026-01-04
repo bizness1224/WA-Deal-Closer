@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from './components/Header';
 import InputForm from './components/InputForm';
@@ -24,26 +23,26 @@ const App: React.FC = () => {
     setError(null);
     try {
       const result = await generateWebinarFollowUps(inputs);
-      if (result.length === 0) throw new Error("Could not generate messages");
+      if (!result || result.length === 0) throw new Error("No messages were generated. Please try a different category.");
       setMessages(result);
       
-      // Smooth scroll to results
       setTimeout(() => {
-        const resultsSection = document.getElementById('results-section');
-        if (resultsSection) {
-          resultsSection.scrollIntoView({ behavior: 'smooth' });
-        } else {
-          window.scrollTo({ top: 600, behavior: 'smooth' });
-        }
+        document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     } catch (err: any) {
-      console.error("Generation Error Details:", err);
-      // Provide a more descriptive error message
-      if (err.message?.includes('API key')) {
-        setError("Configuration error: API key missing or invalid.");
-      } else {
-        setError("Something went wrong. Please check your connection and try again.");
+      console.error("Full Error Object:", err);
+      
+      // Extract the most helpful error message
+      let errorMessage = "Connection failed. Please check your internet or API key.";
+      
+      if (err.message) {
+        if (err.message.includes('API_KEY_INVALID')) errorMessage = "Invalid API Key. Please check your Netlify environment variables.";
+        else if (err.message.includes('SAFETY')) errorMessage = "Content blocked by safety filters. Please try a more professional prompt.";
+        else if (err.message.includes('quota')) errorMessage = "API limit reached. Please try again in a few minutes.";
+        else errorMessage = `Error: ${err.message}`;
       }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -71,8 +70,10 @@ const App: React.FC = () => {
         />
 
         {error && (
-          <div className="mt-8 p-6 bg-red-50 border-2 border-red-100 text-red-700 rounded-2xl text-center font-bold animate-pulse">
-            ⚠️ {error}
+          <div className="mt-8 p-6 bg-red-50 border-2 border-red-100 text-red-700 rounded-2xl text-center font-bold">
+            <div className="text-2xl mb-2">⚠️</div>
+            <p className="text-sm uppercase tracking-wider mb-1 opacity-60">Technical Issue</p>
+            <p>{error}</p>
           </div>
         )}
 
@@ -91,7 +92,7 @@ const App: React.FC = () => {
                 <MessageCard 
                   key={msg.id} 
                   text={msg.text} 
-                  stepName={msg.stepName || `Message ${idx + 1}`}
+                  stepName={msg.stepName}
                   index={idx} 
                 />
               ))}
@@ -112,7 +113,7 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {messages.length === 0 && !loading && (
+        {messages.length === 0 && !loading && !error && (
           <div className="mt-20 flex flex-col items-center">
             <div className="p-8 bg-gray-50 border border-dashed border-gray-300 rounded-[2rem] text-center max-w-sm">
               <div className="text-gray-300 text-6xl mb-4">💬</div>
