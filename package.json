@@ -1,1 +1,12 @@
-'json { "name": "whatsapp-deal-closer", "version": "1.0.0", "private": true, "scripts": { "build": "echo 'no build script defined'" }, "dependencies": {} }'
+
+{
+  "name": "whatsapp-deal-closer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-powered WhatsApp follow-up generator for Indian businesses",
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "@google/genai": "^1.34.0"
+  }
+}

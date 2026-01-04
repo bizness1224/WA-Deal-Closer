@@ -18,7 +18,9 @@ export enum ProductCategory {
   ONLINE_COURSE = 'Online Course',
   MENTORSHIP = 'Mentorship Program',
   SERVICE = 'Agency/Service',
-  TRADING = 'Trading/Finance'
+  TRADING = 'Trading/Finance',
+  REAL_ESTATE = 'Real Estate',
+  ECOM = 'E-commerce'
 }
 
 export enum CustomerType {
@@ -32,8 +34,4 @@ export interface GeneratedMessage {
   id: string;
   text: string;
   stepName: string;
-}
-
-export interface ApiResponse {
-  messages: GeneratedMessage[];
 }
