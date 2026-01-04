@@ -1,16 +1,24 @@
-
 {
   "name": "whatsapp-deal-closer",
   "version": "1.0.0",
   "private": true,
   "description": "AI-powered WhatsApp follow-up generator for Indian businesses",
+  "type": "module",
   "dependencies": {
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "@google/genai": "^1.34.0"
   },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
+  },
   "scripts": {
-    "build": "echo 'Build skipped: App runs directly via ESM'",
-    "start": "echo 'Serve your root directory using any static server'"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   }
 }
